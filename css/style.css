@@ -1,7 +1,7 @@
-/* style.css */
+/* style.css */ 
 
 .book-card {
-    transition: transform 0.2s;
+    transition: transform 0.2s;  // tôi và bạn
 }
 
 .book-card:hover {
