@@ -10,6 +10,13 @@ require_once '../includes/functions.php';
 $pageTitle = 'Thêm sách mới';
 include 'header.php';
 
+$title = '';
+$author = '';
+$publisher = '';
+$year = 0;
+$price = 0;
+$description = '';
+
 $errors = [];
 $success = false;
 
@@ -71,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="mb-3">
             <label for="author" class="form-label">Tác giả *</label>
-            <input type="text" class="form-control" id="author" name="author" required>
+            <input type="text" class="form-control" id="author" name="author" value="<?= htmlspecialchars($author) ?>" required>
         </div>
         <div class="mb-3">
             <label for="publisher" class="form-label">Nhà xuất bản</label>
@@ -79,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="mb-3">
             <label for="year" class="form-label">Năm xuất bản</label>
-            <input type="number" class="form-control" id="year" name="year">
+            <input type="number" class="form-control" id="year" name="year" value="<?= htmlspecialchars($year) ?>>
         </div>
         <div class="mb-3">
             <label for="price" class="form-label">Giá *</label>
@@ -87,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="mb-3">
             <label for="description" class="form-label">Mô tả</label>
-            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            <textarea class="form-control" id="description" name="description" rows="3"><?= htmlspecialchars($description) ?></textarea>
         </div>
         <div class="mb-3">
             <label for="image" class="form-label">Ảnh bìa (JPG/PNG)</label>
