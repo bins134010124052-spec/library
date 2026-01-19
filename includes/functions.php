@@ -37,19 +37,29 @@ function getBookById($id) {
 }
 
 // Get all books with pagination
-function getBooks($limit = 10, $offset = 0, $status = null) {
+function getBooks($limit = 10, $offset = 0, $status = null, $userId = null) {
     global $pdo;
     $sql = "SELECT * FROM books";
     $params = [];
+    
     if ($status) {
-        $sql .= " WHERE status = ?";
-        $params[] = $status;
+        // If status is 'approved', show approved books + books of current user
+        if ($userId) {
+            $sql .= " WHERE (status = ? OR user_id = ?)";
+            $params[] = $status;
+            $params[] = $userId;
+        } else {
+            $sql .= " WHERE status = ?";
+            $params[] = $status;
+        }
     }
-    $sql .= " LIMIT ? OFFSET ?";
+    
+    $sql .= " ORDER BY id DESC LIMIT ? OFFSET ?";
     $stmt = $pdo->prepare($sql);
     $i = 1;
-    if ($status) {
-        $stmt->bindValue($i++, $status, PDO::PARAM_STR);
+    
+    foreach ($params as $param) {
+        $stmt->bindValue($i++, $param, is_int($param) ? PDO::PARAM_INT : PDO::PARAM_STR);
     }
     $stmt->bindValue($i++, $limit, PDO::PARAM_INT);
     $stmt->bindValue($i++, $offset, PDO::PARAM_INT);
@@ -58,37 +68,62 @@ function getBooks($limit = 10, $offset = 0, $status = null) {
 }
 
 // Search books
-function searchBooks($query, $limit = 10, $offset = 0, $status = 'approved') {
+function searchBooks($query, $limit = 10, $offset = 0, $status = 'approved', $userId = null) {
     global $pdo;
-    $stmt = $pdo->prepare("SELECT * FROM books WHERE (title LIKE ? OR author LIKE ?) AND status = ? LIMIT ? OFFSET ?");
-    $search = "%$query%";
-    $stmt->bindParam(1, $search, PDO::PARAM_STR);
-    $stmt->bindParam(2, $search, PDO::PARAM_STR);
-    $stmt->bindParam(3, $status, PDO::PARAM_STR);
-    $stmt->bindParam(4, $limit, PDO::PARAM_INT);
-    $stmt->bindParam(5, $offset, PDO::PARAM_INT);
+    
+    if ($userId) {
+        $stmt = $pdo->prepare("SELECT * FROM books WHERE (title LIKE ? OR author LIKE ?) AND (status = ? OR user_id = ?) ORDER BY id DESC LIMIT ? OFFSET ?");
+        $search = "%$query%";
+        $stmt->bindParam(1, $search, PDO::PARAM_STR);
+        $stmt->bindParam(2, $search, PDO::PARAM_STR);
+        $stmt->bindParam(3, $status, PDO::PARAM_STR);
+        $stmt->bindParam(4, $userId, PDO::PARAM_INT);
+        $stmt->bindParam(5, $limit, PDO::PARAM_INT);
+        $stmt->bindParam(6, $offset, PDO::PARAM_INT);
+    } else {
+        $stmt = $pdo->prepare("SELECT * FROM books WHERE (title LIKE ? OR author LIKE ?) AND status = ? ORDER BY id DESC LIMIT ? OFFSET ?");
+        $search = "%$query%";
+        $stmt->bindParam(1, $search, PDO::PARAM_STR);
+        $stmt->bindParam(2, $search, PDO::PARAM_STR);
+        $stmt->bindParam(3, $status, PDO::PARAM_STR);
+        $stmt->bindParam(4, $limit, PDO::PARAM_INT);
+        $stmt->bindParam(5, $offset, PDO::PARAM_INT);
+    }
+    
     $stmt->execute();
     return $stmt->fetchAll();
 }
 
 // Get total books
-function getTotalBooks($query = '', $status = null) {
+function getTotalBooks($query = '', $status = null, $userId = null) {
     global $pdo;
     if ($query) {
         $sql = "SELECT COUNT(*) FROM books WHERE (title LIKE ? OR author LIKE ?)";
         $params = ["%$query%", "%$query%"];
         if ($status) {
-            $sql .= " AND status = ?";
-            $params[] = $status;
+            if ($userId) {
+                $sql .= " AND (status = ? OR user_id = ?)";
+                $params[] = $status;
+                $params[] = $userId;
+            } else {
+                $sql .= " AND status = ?";
+                $params[] = $status;
+            }
         }
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
     } else {
         $sql = "SELECT COUNT(*) FROM books";
         if ($status) {
-            $sql .= " WHERE status = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$status]);
+            if ($userId) {
+                $sql .= " WHERE (status = ? OR user_id = ?)";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$status, $userId]);
+            } else {
+                $sql .= " WHERE status = ?";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$status]);
+            }
         } else {
             $stmt = $pdo->query($sql);
         }

@@ -9,12 +9,13 @@ $query = isset($_GET['q']) ? sanitize($_GET['q']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 12;
 $offset = ($page - 1) * $limit;
+$userId = isset($_SESSION['user']) ? $_SESSION['user'] : null;
 
 $books = [];
 $totalBooks = 0;
 if ($query) {
-    $books = searchBooks($query, $limit, $offset, 'approved');
-    $totalBooks = getTotalBooks($query, 'approved');
+    $books = searchBooks($query, $limit, $offset, 'approved', $userId);
+    $totalBooks = getTotalBooks($query, 'approved', $userId);
 }
 $totalPages = ceil($totalBooks / $limit);
 ?>

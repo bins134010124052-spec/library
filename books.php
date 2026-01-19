@@ -9,10 +9,11 @@ include 'includes/header.php';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 12;
 $offset = ($page - 1) * $limit;
-$totalBooks = getTotalBooks('', 'approved');
+$userId = isset($_SESSION['user']) ? $_SESSION['user'] : null;
+$totalBooks = getTotalBooks('', 'approved', $userId);
 $totalPages = ceil($totalBooks / $limit);
 
-$books = getBooks($limit, $offset, 'approved');
+$books = getBooks($limit, $offset, 'approved', $userId);
 ?>
 
 <h1 class="mb-4">Tất cả sách</h1>
