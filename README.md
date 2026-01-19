@@ -114,14 +114,15 @@ wepsach/
 - Validate và sanitize tất cả input từ người dùng.
 - Kiểm tra file upload (định dạng ảnh, kích thước tối đa).
 
-## Lưu ý
-- Ứng dụng sử dụng session cho giỏ hàng, không yêu cầu đăng nhập khách hàng.
-- Phân trang được áp dụng cho danh sách sách và đơn hàng.
-- Giao diện responsive, tương thích với thiết bị di động.
-- Nếu gặp lỗi, kiểm tra log lỗi của PHP hoặc MySQL.
+## Chức năng hiện có
 
-## Đóng góp
-Nếu bạn muốn cải thiện dự án, hãy fork và tạo pull request. Mọi góp ý đều được chào đón!
+### Chức năng cho Khách hàng:
+- **Xem và tìm kiếm sách**: Duyệt qua danh sách sách, xem chi tiết từng cuốn và tìm kiếm theo tên hoặc tác giả.
+- **Quản lý giỏ hàng**: Thêm sách vào giỏ, cập nhật số lượng và xóa sản phẩm khỏi giỏ hàng mà không cần đăng nhập (sử dụng session).
+- **Thanh toán đơn hàng**: Hoàn tất quá trình mua sắm bằng cách cung cấp thông tin giao hàng và tạo đơn hàng.
 
-## Giấy phép
-Dự án này là mã nguồn mở, sử dụng dưới giấy phép MIT.
+### Chức năng cho Admin:
+- **Đăng nhập an toàn**: Truy cập vào khu vực quản trị với tài khoản admin được bảo mật.
+- **Quản lý sách toàn diện**: Thêm sách mới, chỉnh sửa thông tin sách hiện có, xóa sách và quản lý hình ảnh bìa sách.
+- **Quản lý đơn hàng hiệu quả**: Xem tất cả các đơn hàng, kiểm tra chi tiết từng đơn và cập nhật trạng thái xử lý của đơn hàng.
+

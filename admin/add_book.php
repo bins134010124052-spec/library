@@ -10,6 +10,13 @@ require_once '../includes/functions.php';
 $pageTitle = 'Thêm sách mới';
 include 'header.php';
 
+$title = '';
+$author = '';
+$publisher = '';
+$year = 0;
+$price = 0;
+$description = '';
+
 $errors = [];
 $success = false;
 
@@ -30,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $imagePath = null;
-    if (isset($_FILES['image'])) {
+    if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($_FILES['image']['error'] != 0) {
             $errors[] = 'Lỗi upload file: ' . $_FILES['image']['error'] . ' (0=ok, 1=too big, 2>max, 3=partial, 4=no file)';
         } elseif (!$imagePath = uploadImage($_FILES['image'])) {
@@ -71,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="mb-3">
             <label for="author" class="form-label">Tác giả *</label>
-            <input type="text" class="form-control" id="author" name="author" required>
+            <input type="text" class="form-control" id="author" name="author" value="<?= htmlspecialchars($author) ?>" required>
         </div>
         <div class="mb-3">
             <label for="publisher" class="form-label">Nhà xuất bản</label>
@@ -79,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="mb-3">
             <label for="year" class="form-label">Năm xuất bản</label>
-            <input type="number" class="form-control" id="year" name="year">
+            <input type="number" class="form-control" id="year" name="year" value="<?= htmlspecialchars($year) ?>>
         </div>
         <div class="mb-3">
             <label for="price" class="form-label">Giá *</label>
@@ -87,8 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="mb-3">
             <label for="description" class="form-label">Mô tả</label>
-            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-        </div>
+            <textarea class="form-control" id="description" name="description" rows="3"><?= htmlspecialchars($description) ?></textarea>
+r        </div>
         <div class="mb-3">
             <label for="image" class="form-label">Ảnh bìa (JPG/PNG)</label>
             <input type="file" class="form-control" id="image" name="image" accept="image/*">

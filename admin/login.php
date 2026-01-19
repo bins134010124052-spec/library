@@ -16,13 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password)) {
         $errors[] = 'Vui lòng nhập đầy đủ thông tin.';
     } else {
-        global $pdo;
         $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
         $stmt->execute([$username]);
         $admin = $stmt->fetch();
 
         if ($admin && verifyPassword($password, $admin['password'])) {
-            $_SESSION['admin'] = $admin['id'];
+            $_SESSION['admin'] = $admin;
             header('Location: dashboard.php');
             exit;
         } else {

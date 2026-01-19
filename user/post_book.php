@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = sanitize($_POST['title'] ?? '');
     $author = sanitize($_POST['author'] ?? '');
     $publisher = sanitize($_POST['publisher'] ?? '');
-    $year = (int)($_POST['year'] ?? 0);
+
     $price = (float)($_POST['price'] ?? 0);
     $description = sanitize($_POST['description'] ?? '');
 
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $imagePath = null;
-    if (isset($_FILES['image'])) {
+    if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($_FILES['image']['error'] != 0) {
             $errors[] = 'Lỗi upload file: ' . $_FILES['image']['error'] . ' (0=ok, 1=too big, 2>max, 3=partial, 4=no file)';
         } elseif (!$imagePath = uploadImage($_FILES['image'])) {
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        if (addBook(['title' => $title, 'author' => $author, 'publisher' => $publisher, 'year' => $year, 'price' => $price, 'description' => $description], $imagePath, $_SESSION['user'], 'pending')) {
+        if (addBook(['title' => $title, 'author' => $author, 'publisher' => $publisher, 'price' => $price, 'description' => $description], $imagePath, $_SESSION['user'], 'pending')) {
             $success = true;
         } else {
             $errors[] = 'Lỗi đăng sách.';
@@ -73,10 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="publisher" class="form-label">Nhà xuất bản</label>
             <input type="text" class="form-control" id="publisher" name="publisher">
         </div>
-        <div class="mb-3">
-            <label for="year" class="form-label">Năm xuất bản</label>
-            <input type="number" class="form-control" id="year" name="year">
-        </div>
+
         <div class="mb-3">
             <label for="price" class="form-label">Giá *</label>
             <input type="number" step="0.01" class="form-control" id="price" name="price" required>
