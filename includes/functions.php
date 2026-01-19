@@ -317,4 +317,30 @@ function getUserByEmail($email) {
     $stmt->execute([$email]);
     return $stmt->fetch();
 }
+
+// Get books posted by user
+function getBooksByUserId($userId, $limit = 10, $offset = 0) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM books WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?");
+    $stmt->bindParam(1, $userId, PDO::PARAM_INT);
+    $stmt->bindParam(2, $limit, PDO::PARAM_INT);
+    $stmt->bindParam(3, $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+// Get total books posted by user
+function getTotalUserBooks($userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM books WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetchColumn();
+}
+
+// Delete book by user
+function deleteBookByUser($bookId, $userId) {
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM books WHERE id = ? AND user_id = ?");
+    return $stmt->execute([$bookId, $userId]);
+}
 ?>
