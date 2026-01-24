@@ -1,6 +1,7 @@
 <?php
 // functions.php - Utility functions
 
+
 require_once 'config.php';
 
 // Sanitize input

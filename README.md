@@ -126,3 +126,62 @@ wepsach/
 - **Quản lý sách toàn diện**: Thêm sách mới, chỉnh sửa thông tin sách hiện có, xóa sách và quản lý hình ảnh bìa sách.
 - **Quản lý đơn hàng hiệu quả**: Xem tất cả các đơn hàng, kiểm tra chi tiết từng đơn và cập nhật trạng thái xử lý của đơn hàng.
 
+## Hoạt động của Hệ thống
+
+Hệ thống hoạt động theo mô hình client-server với hai luồng chính:
+
+### Luồng Khách hàng:
+1. Khách hàng truy cập trang chủ, duyệt danh sách sách hoặc tìm kiếm
+2. Xem chi tiết sách, thêm sách vào giỏ hàng (lưu trong Session)
+3. Xem giỏ hàng, cập nhật số lượng hoặc xóa sách
+4. Điền thông tin giao hàng và thanh toán
+5. Đơn hàng được lưu vào database, giỏ hàng được xóa
+
+### Luồng Admin:
+1. Admin đăng nhập vào khu vực quản trị với tài khoản được bảo mật
+2. Từ dashboard, admin có thể:
+   - **Quản lý sách**: Thêm sách mới (kèm upload ảnh), chỉnh sửa thông tin, xóa sách khỏi hệ thống
+   - **Quản lý đơn hàng**: Xem danh sách đơn hàng từ khách hàng, xem chi tiết, cập nhật trạng thái (chờ xử lý, đang giao, đã giao, v.v.)
+3. Dữ liệu được cập nhật trong database MySQL ngay lập tức
+
+### Lưu trữ Dữ liệu:
+- **Books table**: Lưu thông tin sách (tiêu đề, tác giả, giá, mô tả, hình ảnh)
+- **Orders table**: Lưu thông tin đơn hàng (ngày, trạng thái, thông tin khách)
+- **Order items table**: Lưu chi tiết sách trong từng đơn hàng (sách nào, số lượng, giá)
+- **Session**: Giỏ hàng được lưu tạm thời trong session của khách hàng
+
+## Proposed System (Hệ Thống Đề Xuất)
+
+Hệ thống được đề xuất sẽ tích hợp thêm các tính năng nâng cao để tối ưu hóa trải nghiệm người dùng:
+
+### Tính năng Đề xuất/Gợi ý Sách:
+- **Hiển thị sách liên quan**: Dựa trên thể loại sách mà khách hàng đang xem
+- **Sách bán chạy nhất**: Hiển thị top sách được mua nhiều nhất
+- **Sách mới nhất**: Hiển thị các sách vừa được thêm gần đây
+- **Sách được xếp hạng cao**: Dựa trên đánh giá của khách hàng
+
+### Hệ Thống Đánh Giá & Bình Luận:
+- Khách hàng có thể đánh giá sách (1-5 sao) sau khi mua
+- Khách hàng có thể viết bình luận, chia sẻ trải nghiệm về sách
+- Hiển thị trung bình điểm và số lượng đánh giá trên trang chi tiết sách
+
+### Chức Năng Tài Khoản Khách Hàng:
+- **Tạo tài khoản**: Khách hàng có thể đăng ký tài khoản để theo dõi đơn hàng
+- **Lịch sử mua hàng**: Xem lại các đơn hàng đã mua, tình trạng giao hàng
+- **Danh sách yêu thích**: Lưu những sách mà khách hàng quan tâm để mua sau
+
+### Cải Tiến cho Admin:
+- **Thống kê báo cáo**: Xem doanh số bán hàng, sách bán chạy, doanh thu theo tháng/năm
+- **Quản lý danh mục**: Thêm/sửa/xóa danh mục sách (Văn học, Kinh tế, Lịch sử, v.v.)
+- **Quản lý người dùng**: Xem danh sách khách hàng, quản lý tài khoản
+
+### Nâng Cao Bảo Mật:
+- **Two-Factor Authentication (2FA)**: Bảo mật tài khoản admin
+- **Mã hóa SSL/TLS**: Bảo vệ giao dịch thanh toán
+- **Backup Database**: Sao lưu dữ liệu định kỳ
+- **Giám sát hoạt động**: Ghi nhật ký hoạt động admin
+
+### Tích Hợp Thanh Toán:
+- **Thanh toán trực tuyến**: Tích hợp PayPal, Stripe, hoặc cổng thanh toán địa phương
+- **Quản lý hóa đơn**: Tự động tạo và gửi hóa đơn điện tử cho khách hàng
+
