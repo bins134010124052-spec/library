@@ -1,31 +1,48 @@
     <?php
     session_start();
-    require_once '../includes/functions.php';
-
-    if (isset($_SESSION['admin'])) {
+    
+    // Clear any previous session data before checking
+    if (isset($_SESSION['admin']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+        // Already logged in, redirect
         header('Location: dashboard.php');
         exit;
     }
 
+    require_once '../includes/functions.php';
+
     $errors = [];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Logout any previous session
+        $_SESSION = [];
+        
         $username = sanitize($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
 
         if (empty($username) || empty($password)) {
             $errors[] = 'Vui lòng nhập đầy đủ thông tin.';
         } else {
-            $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
-            $stmt->execute([$username]);
-            $admin = $stmt->fetch();
-
-            if ($admin && verifyPassword($password, $admin['password'])) {
-                $_SESSION['admin'] = $admin;
-                header('Location: dashboard.php');
-                exit;
+            global $pdo;
+            if (!$pdo) {
+                $errors[] = 'Lỗi kết nối database. Vui lòng liên hệ admin.';
             } else {
-                $errors[] = 'Tên đăng nhập hoặc mật khẩu không đúng.';
+                $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
+                $stmt->execute([$username]);
+                $admin = $stmt->fetch();
+
+                if ($admin && verifyPassword($password, $admin['password'])) {
+                    // Successful login - regenerate session
+                    session_regenerate_id(true);
+                    $_SESSION['admin'] = $admin['id'];
+                    $_SESSION['admin_username'] = $admin['username'];
+                    $_SESSION['login_time'] = time();
+                    header('Location: dashboard.php');
+                    exit;
+                } else {
+                    // Clear session on failed login
+                    $_SESSION = [];
+                    $errors[] = 'Tên đăng nhập hoặc mật khẩu không đúng.';
+                }
             }
         }
     }

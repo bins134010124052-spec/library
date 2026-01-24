@@ -1,8 +1,12 @@
 <?php
 // functions.php - Utility functions
 
-
-require_once 'config.php';
+// Include config - use absolute path to avoid issues
+$config_path = __DIR__ . '/config.php';
+if (!file_exists($config_path)) {
+    die("Config file not found: " . $config_path);
+}
+require_once $config_path;
 
 // Sanitize input
 function sanitize($data) {

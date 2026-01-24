@@ -185,3 +185,386 @@ Hệ thống được đề xuất sẽ tích hợp thêm các tính năng nâng
 - **Thanh toán trực tuyến**: Tích hợp PayPal, Stripe, hoặc cổng thanh toán địa phương
 - **Quản lý hóa đơn**: Tự động tạo và gửi hóa đơn điện tử cho khách hàng
 
+## Code Design (Thiết Kế Mã)
+
+### Kiến Trúc Hệ Thống
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         CLIENT (BROWSER)                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │  HTML/CSS    │  │  Bootstrap 5 │  │  JavaScript (AJAX)   │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+└────────────────────────────┬──────────────────────────────────┘
+                             │ HTTP Requests
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      WEB SERVER (APACHE)                        │
+└────────────────────────────┬──────────────────────────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  PHP Router     │
+                    └────────┬────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+    ┌───▼─────┐         ┌────▼────┐         ┌────▼─────┐
+    │ includes│         │  admin/ │         │  user/   │
+    │(Shared) │         │ (Admin) │         │(Customer)│
+    └─────────┘         └─────────┘         └──────────┘
+        │                    │                    │
+        └────────────────────┼────────────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  PDO Database   │
+                    │     Layer       │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  MySQL Server   │
+                    │  (wepsach DB)   │
+                    └─────────────────┘
+```
+
+### Mô Hình MVC (Model-View-Controller)
+
+Ứng dụng tuân theo nguyên tắc MVC dù sử dụng PHP thuần:
+
+#### **Model (Dữ liệu)**
+- `includes/config.php` - Cấu hình kết nối database
+- `includes/db_connect.php` - Kết nối PDO
+- Các bảng trong MySQL: `books`, `orders`, `order_items`, `admin_users`
+
+#### **View (Giao diện)**
+- Frontend: `index.php`, `books.php`, `book_detail.php`, `cart.php`, `checkout.php`
+- Admin: `admin/dashboard.php`, `admin/books.php`, `admin/orders.php`
+- Shared templates: `includes/header.php`, `includes/footer.php`
+
+#### **Controller (Logic xử lý)**
+- `add_to_cart.php`, `update_cart.php`, `remove_from_cart.php` - Giỏ hàng
+- `admin/add_book.php`, `admin/edit_book.php`, `admin/delete_book.php` - Sách
+- `admin/update_order_status.php` - Đơn hàng
+- `includes/functions.php` - Hàm tiện ích
+
+### Sơ Đồ Cơ Sở Dữ Liệu (Database Schema)
+
+```
+┌─────────────────────┐
+│      ADMIN_USERS    │
+├─────────────────────┤
+│ id (PK)            │
+│ username           │
+│ password (hash)    │
+│ email              │
+│ created_at         │
+└─────────────────────┘
+
+┌─────────────────────┐
+│       BOOKS         │
+├─────────────────────┤
+│ id (PK)            │
+│ title              │
+│ author             │
+│ price              │
+│ description        │
+│ cover_image        │
+│ stock              │
+│ created_at         │
+│ updated_at         │
+└─────────────────────┘
+
+┌─────────────────────┐          ┌──────────────────┐
+│      ORDERS         │◄─────────┤  ORDER_ITEMS     │
+├─────────────────────┤          ├──────────────────┤
+│ id (PK)            │          │ id (PK)         │
+│ order_code         │          │ order_id (FK)   │
+│ customer_name      │          │ book_id (FK)    │
+│ customer_email     │          │ quantity        │
+│ customer_phone     │          │ price           │
+│ customer_address   │          │ subtotal        │
+│ total_amount       │          └──────────────────┘
+│ status             │
+│ created_at         │
+│ updated_at         │
+└─────────────────────┘
+```
+
+**Quan hệ giữa các bảng:**
+- `ORDERS` (1) ---→ (N) `ORDER_ITEMS`
+- `BOOKS` (1) ---→ (N) `ORDER_ITEMS`
+- Một đơn hàng chứa nhiều item sách
+
+### Luồng Dữ Liệu (Data Flow)
+
+#### **Luồng Tìm Kiếm & Xem Sách**
+```
+User Browser
+    │
+    ▼
+GET /books.php?search=...
+    │
+    ▼
+PHP File (books.php)
+    │
+    ├─→ functions.php (validate input)
+    │
+    ├─→ db_connect.php (get PDO connection)
+    │
+    ├─→ Query: SELECT * FROM books WHERE title LIKE ?
+    │
+    ▼
+MySQL Database
+    │
+    ▼
+Fetch Results (Array)
+    │
+    ▼
+Render HTML + Bootstrap CSS
+    │
+    ▼
+User Browser (Display)
+```
+
+#### **Luồng Thêm vào Giỏ Hàng**
+```
+Click "Add to Cart" Button
+    │
+    ▼
+JavaScript (script.js)
+    │
+    ├─→ Validate book_id
+    │
+    ▼
+POST /add_to_cart.php?book_id=...
+    │
+    ▼
+PHP File (add_to_cart.php)
+    │
+    ├─→ Session Start
+    │
+    ├─→ Validate book_id
+    │
+    ├─→ Get book details from database
+    │
+    ├─→ Add to $_SESSION['cart']
+    │
+    ▼
+JSON Response (Success/Error)
+    │
+    ▼
+JavaScript Update UI
+    │
+    ▼
+User sees updated cart
+```
+
+#### **Luồng Thanh Toán**
+```
+User fills checkout form
+    │
+    ▼
+POST /checkout.php
+    │
+    ▼
+PHP File (checkout.php)
+    │
+    ├─→ Validate customer info
+    │
+    ├─→ Validate cart items
+    │
+    ├─→ BEGIN TRANSACTION
+    │
+    ├─→ INSERT INTO orders (...)
+    │
+    ├─→ GET last insert id
+    │
+    ├─→ INSERT INTO order_items (...) for each book
+    │
+    ├─→ COMMIT TRANSACTION
+    │
+    ├─→ Clear $_SESSION['cart']
+    │
+    ▼
+Database (Orders & Order_items saved)
+    │
+    ▼
+PHP Display Success Message
+    │
+    ▼
+User receives confirmation
+```
+
+### Các Design Patterns Sử Dụng
+
+#### **1. Singleton Pattern (cơ sở dữ liệu)**
+```php
+// Database connection được khởi tạo một lần
+$pdo = new PDO($dsn, $user, $pass);
+// được tái sử dụng trong toàn ứng dụng
+```
+
+#### **2. Repository Pattern**
+```php
+// functions.php chứa các hàm truy vấn
+function getBooks($search = '') { ... }
+function getBookById($id) { ... }
+function getOrders() { ... }
+```
+
+#### **3. Session Management Pattern**
+```php
+// Giỏ hàng lưu trong session
+$_SESSION['cart'] = [
+    'book_id' => 1,
+    'quantity' => 2,
+    ...
+];
+```
+
+#### **4. Middleware Pattern (không chính thức)**
+```php
+// Kiểm tra quyền admin trước khi cho vào trang
+if (!isset($_SESSION['admin_id'])) {
+    redirect('login.php');
+}
+```
+
+### Cấu Trúc File & Trách Nhiệm
+
+| File | Trách Nhiệm |
+|------|-----------|
+| `includes/config.php` | Cấu hình kết nối DB, constants |
+| `includes/db_connect.php` | Khởi tạo kết nối PDO |
+| `includes/functions.php` | Helper functions, business logic |
+| `includes/header.php` | Navigation, layout top |
+| `includes/footer.php` | Footer, scripts |
+| `index.php` | Trang chủ, hiển thị sách nổi bật |
+| `books.php` | Danh sách sách với tìm kiếm |
+| `book_detail.php` | Chi tiết một cuốn sách |
+| `cart.php` | Hiển thị giỏ hàng |
+| `checkout.php` | Xử lý thanh toán, tạo đơn hàng |
+| `add_to_cart.php` | AJAX endpoint: thêm sách |
+| `update_cart.php` | AJAX endpoint: cập nhật số lượng |
+| `remove_from_cart.php` | AJAX endpoint: xóa sách |
+| `admin/login.php` | Xác thực admin |
+| `admin/dashboard.php` | Bảng điều khiển admin |
+| `admin/books.php` | Danh sách sách (admin) |
+| `admin/add_book.php` | Thêm sách mới |
+| `admin/edit_book.php` | Chỉnh sửa sách |
+| `admin/delete_book.php` | Xóa sách |
+| `admin/orders.php` | Danh sách đơn hàng |
+| `admin/order_detail.php` | Chi tiết đơn hàng |
+| `admin/update_order_status.php` | Cập nhật trạng thái |
+
+### Xử Lý Lỗi & Bảo Mật
+
+#### **SQL Injection Prevention**
+```php
+// ❌ Nguy hiểm (không sử dụng)
+$query = "SELECT * FROM books WHERE id = " . $_GET['id'];
+
+// ✅ Đúng cách (sử dụng Prepared Statements)
+$query = $pdo->prepare("SELECT * FROM books WHERE id = ?");
+$query->execute([$_GET['id']]);
+```
+
+#### **XSS Prevention**
+```php
+// ❌ Nguy hiểm
+echo $book['title'];
+
+// ✅ Đúng cách
+echo htmlspecialchars($book['title'], ENT_QUOTES, 'UTF-8');
+```
+
+#### **Password Hashing**
+```php
+// Tạo password hash
+$hashed = password_hash('admin123', PASSWORD_DEFAULT);
+
+// Xác minh password
+if (password_verify($input_password, $hashed)) {
+    // Đúng password
+}
+```
+
+### Endpoints Chính
+
+#### **Customer Endpoints**
+| Method | URL | Mô Tả |
+|--------|-----|-------|
+| GET | `/index.php` | Trang chủ |
+| GET | `/books.php` | Danh sách sách |
+| GET | `/book_detail.php?id={id}` | Chi tiết sách |
+| GET | `/search.php?q={query}` | Tìm kiếm |
+| GET | `/cart.php` | Xem giỏ |
+| POST | `/add_to_cart.php` | Thêm vào giỏ |
+| POST | `/update_cart.php` | Cập nhật giỏ |
+| POST | `/remove_from_cart.php` | Xóa khỏi giỏ |
+| POST | `/checkout.php` | Thanh toán |
+
+#### **Admin Endpoints**
+| Method | URL | Mô Tả |
+|--------|-----|-------|
+| GET | `/admin/login.php` | Đăng nhập |
+| GET | `/admin/dashboard.php` | Dashboard |
+| GET | `/admin/books.php` | Danh sách sách |
+| POST | `/admin/add_book.php` | Thêm sách |
+| POST | `/admin/edit_book.php` | Chỉnh sửa sách |
+| POST | `/admin/delete_book.php` | Xóa sách |
+| GET | `/admin/orders.php` | Danh sách đơn |
+| GET | `/admin/order_detail.php?id={id}` | Chi tiết đơn |
+| POST | `/admin/update_order_status.php` | Cập nhật trạng thái |
+
+### Quy Ước Mã (Code Conventions)
+
+#### **Naming Conventions**
+- **Variables**: `$snake_case` - `$book_title`, `$customer_name`
+- **Functions**: `camelCase()` - `getBookById()`, `validateEmail()`
+- **Constants**: `UPPER_SNAKE_CASE` - `DB_HOST`, `MAX_FILE_SIZE`
+- **Database**: lowercase - `books`, `admin_users`, `order_items`
+
+#### **File Organization**
+```
+wepsach/
+├── includes/          # Shared code
+├── admin/             # Admin section
+├── user/              # User profiles (tương lai)
+├── uploads/           # User-uploaded files
+├── css/               # Stylesheets
+├── js/                # Scripts
+├── sql/               # Database files
+└── [page].php         # Main pages
+```
+
+#### **Comment Style**
+```php
+// Single line comment
+
+/**
+ * Multi-line comment for functions
+ * @param type $variable Description
+ * @return type Description
+ */
+function example($variable) {
+    // Implementation
+}
+```
+
+### Performance Optimization
+
+#### **Database Optimization**
+- Sử dụng indexes trên cột `id`, `title`, `book_id`
+- Limit kết quả với LIMIT/OFFSET cho phân trang
+
+#### **Frontend Optimization**
+- Bootstrap 5 CDN (cached)
+- Minified CSS/JS (nếu có)
+- Lazy loading cho ảnh (có thể thêm)
+
+#### **Session Management**
+- Session timeout để tránh session bloat
+- Clear cart sau checkout
+
+---
+
