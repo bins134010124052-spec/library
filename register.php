@@ -44,7 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Auto login after registration
             $user = loginUser($data['email'], $data['password']);
             if ($user) {
+                // Successful login - regenerate session
+                session_regenerate_id(true);
                 $_SESSION['user'] = $user['id'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['login_time'] = time();
                 header('Location: user/dashboard.php');
                 exit;
             } else {

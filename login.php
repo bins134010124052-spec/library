@@ -1,8 +1,9 @@
 <?php
 session_start();
-require_once 'includes/functions.php';
 
-if (isset($_SESSION['user']) || isset($_SESSION['admin'])) {
+// Clear any previous session data before checking
+if ((isset($_SESSION['user']) || isset($_SESSION['admin'])) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+    // Already logged in, redirect
     if (isset($_SESSION['user'])) {
         header('Location: user/dashboard.php');
     } else {
@@ -11,9 +12,14 @@ if (isset($_SESSION['user']) || isset($_SESSION['admin'])) {
     exit;
 }
 
+require_once 'includes/functions.php';
+
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    // Clear any previous session data
+    $_SESSION = [];
+    
     $account = sanitize($_POST['account'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -24,11 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             // Treat as email, check users
             $user = loginUser($account, $password);
             if ($user) {
+                // Successful login - regenerate session
+                session_regenerate_id(true);
                 $_SESSION['user'] = $user['id'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['login_time'] = time();
                 $redirect = $_GET['redirect'] ?? 'index.php';
                 header('Location: ' . $redirect);
                 exit;
             } else {
+                $_SESSION = [];
                 $errors[] = 'Tài khoản hoặc mật khẩu không đúng.';
             }
         } else {
@@ -38,10 +49,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $stmt->execute([$account]);
             $admin = $stmt->fetch();
             if ($admin && verifyPassword($password, $admin['password'])) {
+                // Successful login - regenerate session
+                session_regenerate_id(true);
                 $_SESSION['admin'] = $admin['id'];
+                $_SESSION['admin_username'] = $admin['username'];
+                $_SESSION['login_time'] = time();
                 header('Location: admin/dashboard.php');
                 exit;
             } else {
+                $_SESSION = [];
                 $errors[] = 'Tài khoản hoặc mật khẩu không đúng.';
             }
         }
