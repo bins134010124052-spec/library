@@ -8,13 +8,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS admins;
 CREATE TABLE admins (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
+    full_name VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert sample admin
-INSERT INTO admins (username, email, password) VALUES ('admin', 'admin@example.com', '$2y$10$FqfdCPqVDyKoEWgpFImUW.T8R5o98GTTmn.fSPifCMxRvEVJeTt1W');
+INSERT INTO admins (email, full_name, password) VALUES ('admin@thuviensach.shop', 'Quản Trị Viên', '$2y$10$FqfdCPqVDyKoEWgpFImUW.T8R5o98GTTmn.fSPifCMxRvEVJeTt1W');
 
 -- Table: users
 DROP TABLE IF EXISTS users;

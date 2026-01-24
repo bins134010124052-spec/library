@@ -16,32 +16,34 @@
         // Logout any previous session
         $_SESSION = [];
         
-        $username = sanitize($_POST['username'] ?? '');
+        $account = sanitize($_POST['account'] ?? '');
         $password = $_POST['password'] ?? '';
 
-        if (empty($username) || empty($password)) {
+        if (empty($account) || empty($password)) {
             $errors[] = 'Vui lòng nhập đầy đủ thông tin.';
         } else {
             global $pdo;
             if (!$pdo) {
                 $errors[] = 'Lỗi kết nối database. Vui lòng liên hệ admin.';
             } else {
-                $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
-                $stmt->execute([$username]);
+                // Check by email or full_name
+                $stmt = $pdo->prepare("SELECT * FROM admins WHERE email = ? OR full_name = ?");
+                $stmt->execute([$account, $account]);
                 $admin = $stmt->fetch();
 
                 if ($admin && verifyPassword($password, $admin['password'])) {
                     // Successful login - regenerate session
                     session_regenerate_id(true);
                     $_SESSION['admin'] = $admin['id'];
-                    $_SESSION['admin_username'] = $admin['username'];
+                    $_SESSION['admin_email'] = $admin['email'];
+                    $_SESSION['admin_name'] = $admin['full_name'];
                     $_SESSION['login_time'] = time();
                     header('Location: dashboard.php');
                     exit;
                 } else {
                     // Clear session on failed login
                     $_SESSION = [];
-                    $errors[] = 'Tên đăng nhập hoặc mật khẩu không đúng.';
+                    $errors[] = 'Email/Họ tên hoặc mật khẩu không đúng.';
                 }
             }
         }
@@ -76,8 +78,8 @@
                             <?php endif; ?>
                             <form method="POST">
                                 <div class="mb-3">
-                                    <label for="username" class="form-label">Tên đăng nhập</label>
-                                    <input type="text" class="form-control" id="username" name="username" required>
+                                    <label for="account" class="form-label">Email hoặc Họ tên</label>
+                                    <input type="text" class="form-control" id="account" name="account" placeholder="Nhập Gmail hoặc họ tên" required>
                                 </div>
                                 <div class="mb-3">
                                     <label for="password" class="form-label">Mật khẩu</label>

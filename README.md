@@ -62,7 +62,8 @@
 ### Cho Admin:
 - Truy cập `http://localhost/wepsach/admin/login.php`.
 - Đăng nhập với tài khoản mẫu:
-  - Username: `admin`
+  - Email: `admin@thuviensach.shop`
+  - Họ tên: `Quản Trị Viên`
   - Password: `admin123`
 - Quản lý sách và đơn hàng từ dashboard.
 
